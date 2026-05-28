@@ -1,5 +1,9 @@
 `include "params.vh"
 
+// `define TESTBENCH
+
+`define RAM_SIZE 32768  // RAM size in bytes
+
 module cpu(
     input wire clk,
     input wire rst,
@@ -61,14 +65,16 @@ reg [3:0] byte_mask;
 
 reg [31:0] reg_wr_data;
 
+reg [31:0] pc_prev;
+
 always @(posedge clk) begin
+    pc_prev <= pc;
+
     if (ir_write) begin
         ir <= ram_rd_data;
-        pc_exec <= pc;
+        pc_exec <= pc_prev;
     end
-    // if (ir_write) begin
-    //     pc_exec <= pc;
-    // end
+
     alu_out <= alu_result;
     mem_data_reg <= ram_rd_data;
 end
@@ -81,28 +87,30 @@ wire [7:0] fb_data;
 
 // DISPLAY OUTPUT //
 
-// Generate pixel and tmds clock (25MHz and 250MHz)
-wire clkp, clkt;
-dvi_pll pll(.clk_in(clk), .clkp(clkp), .clkt(clkt), .locked());
+`ifndef TESTBENCH
+    // Generate pixel and tmds clock (25MHz and 250MHz)
+    wire clkp, clkt;
+    dvi_pll pll(.clk_in(clk), .clkp(clkp), .clkt(clkt), .locked());
 
-dvi_out dvi(
-    .clkp(clkp),
-    .fb_addr(fb_addr),
-    .fb_data (fb_data),
-    .vga_r(vga_r),
-    .vga_g(vga_g),
-    .vga_b(vga_b),
-    .vsync(vsync),
-    .hsync(hsync),
-    .de(de)
-);
+    dvi_out dvi(
+        .clkp(clkp),
+        .fb_addr(fb_addr),
+        .fb_data (fb_data),
+        .vga_r(vga_r),
+        .vga_g(vga_g),
+        .vga_b(vga_b),
+        .vsync(vsync),
+        .hsync(hsync),
+        .de(de)
+    );
 
-// Convert the signal to DVI and send over HDMI
-vga2tmds tmds_generator(
-	.clkp(clkp), .clkt(clkt),
-	.vsync(vsync), .hsync(hsync), .de(de),
-	.r(vga_r), .g(vga_g), .b(vga_b), .tmds(gpdi_dp)
-);
+    // Convert the signal to DVI and send over HDMI
+    vga2tmds tmds_generator(
+    	.clkp(clkp), .clkt(clkt),
+    	.vsync(vsync), .hsync(hsync), .de(de),
+    	.r(vga_r), .g(vga_g), .b(vga_b), .tmds(gpdi_dp)
+    );
+`endif
 
 // CPU MODULES //
 
@@ -128,30 +136,68 @@ registers registers_inst(
     .rd_data_r1(rs1_data), .rd_data_r2(rs2_data)
 );
 
+reg [31:0] wr_data_mux;
+
 always @(*) begin
     case (mem_addr_src)
         `MEM_PC:   mem_addr_mux = pc;
         `MEM_ADDR: mem_addr_mux = mem_addr;
     endcase
 
+    byte_mask = 4'b1111;
+    wr_data_mux = rs2_data;
+
     case (funct3)
-        3'b000:  byte_mask = 4'b0001;
-        3'b001:  byte_mask = 4'b0011;
-        3'b010:  byte_mask = 4'b1111;
-        default: byte_mask = 4'b1111;
+        3'b000: begin
+            case (mem_addr_mux[1:0])
+                2'b00: begin
+                    byte_mask = 4'b1000;
+                    wr_data_mux = {rs2_data[7:0], 24'b0};
+                end
+                2'b01: begin
+                    byte_mask = 4'b0100;
+                    wr_data_mux = {8'b0, rs2_data[7:0], 16'b0};
+                end
+                2'b10: begin
+                    byte_mask = 4'b0010;
+                    wr_data_mux = {16'b0, rs2_data[7:0], 8'b0};
+                end
+                2'b11: begin
+                    byte_mask = 4'b0001;
+                    wr_data_mux = {24'b0, rs2_data[7:0]};
+                end
+            endcase
+        end
+        3'b001:
+            case (mem_addr_mux[1])
+                1'b0: begin
+                    byte_mask = 4'b1100;
+                    wr_data_mux = {rs2_data[15:0], 16'b0};
+                end
+                1'b1: begin
+                    byte_mask = 4'b0011;
+                    wr_data_mux = {16'b0, rs2_data[15:0]};
+                end
+            endcase
+        3'b010: begin
+            byte_mask = 4'b1111;
+            wr_data_mux = rs2_data;
+        end
     endcase
 end
 
-ram ram_inst(
+ram ram_inst (
     .clk(clk),
     .data_addr(mem_addr_mux),
     .fb_addr(fb_addr),
     .we(mem_write), .re(mem_read),
     .byte_mask(byte_mask),
-    .wr_data(rs2_data),
+    .wr_data(wr_data_mux),
     .rd_data(ram_rd_data),
     .fb_data(fb_data)
 );
+
+defparam ram_inst.SIZE = `RAM_SIZE;
 
 always @(*) begin
     case (alu_a_src)

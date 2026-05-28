@@ -20,7 +20,7 @@ initial begin
     @(posedge clk); // hold for two cycles to be safe
     #1 rst = 1'b0;  // deasert just after the edge, not on it
 
-    #5000 $finish;
+    #1000 $finish;
 end
 
 endmodule

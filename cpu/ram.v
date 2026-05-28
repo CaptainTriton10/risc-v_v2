@@ -1,6 +1,6 @@
 module ram #(
-    parameter SIZE_BITS = 32768,
-    parameter FB_BLOCK = 9'h1A8
+    parameter SIZE = 32768,
+    parameter FB_BLOCK = 16'h1C00
 ) (
     input wire clk,
     input wire [31:0] data_addr,
@@ -13,13 +13,13 @@ module ram #(
     output reg [31:0] rd_data
 );
 
-localparam WORDS = SIZE_BITS / 32;
+localparam WORDS = SIZE / 4;
 
 wire [$clog2(WORDS)-1:0] word_data_addr  = data_addr[2 +: $clog2(WORDS)];
 
 initial begin
-    // $readmemh("fb.hex", mem, 424, 1024);
-    $readmemh("program.hex", mem, 0, 423);
+    // $readmemh("fb.hex", mem, 16'h1C00, 16'h2000);
+    $readmemh("program.hex", mem, 0, FB_BLOCK);
 end
 
 (* ram_style = "block" *) reg [31:0] mem [(WORDS)-1:0];
