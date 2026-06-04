@@ -4,3 +4,10 @@
 *.json
 *.svf
 *.config
+*.bit
+*.svf
+*.bin
+*.elf
+*.o
+program.hex
+fb.hex
