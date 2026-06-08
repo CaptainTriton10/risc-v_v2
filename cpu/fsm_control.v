@@ -29,7 +29,7 @@ always @(*) begin
             case (opcode)
                 `OP_REG, `OP_IMM, `OP_LUI, `OP_AUIPC: next_state = `S_WRITEBACK;
                 `OP_LOAD, `OP_STORE: next_state = `S_MEMORY;
-                `OP_BRANCH: next_state = `S_FETCH;
+                `OP_BRANCH: next_state = `S_WRITEBACK;
                 `OP_JAL, `OP_JALR: next_state = `S_WRITEBACK;
                 default: next_state = `S_FETCH;
             endcase
@@ -91,6 +91,10 @@ always @(*) begin
                     alu_a_src = `ALU_A_PC;
                     alu_b_src = `ALU_B_IMM;
                 end
+                `OP_BRANCH: begin
+                    alu_a_src = `ALU_A_PC;
+                    alu_b_src = `ALU_B_IMM;
+                end
                 `OP_LOAD, `OP_STORE: begin
                     alu_a_src = `ALU_A_RS1;
                     alu_b_src = `ALU_B_IMM;
@@ -129,8 +133,8 @@ always @(*) begin
                     wb_sel = `WB_PC4;
                 end
                 `OP_BRANCH: begin
-                    // TODO: store
                     pc_write = branch_taken;
+                    pc_src = `PC_IMM;
                 end
                 default: ;
             endcase

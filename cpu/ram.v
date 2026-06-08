@@ -18,12 +18,12 @@ localparam FB_BLOCK_W = FB_BLOCK / 4;
 
 wire [$clog2(WORDS)-1:0] word_data_addr  = data_addr[2 +: $clog2(WORDS)];
 
+(* ram_style = "block" *) reg [31:0] mem [(WORDS)-1:0];
+
 initial begin
     // $readmemh("vga/all_text.hex", mem, FB_BLOCK_W, WORDS);
     $readmemh("program.hex", mem, 0, FB_BLOCK_W);
 end
-
-(* ram_style = "block" *) reg [31:0] mem [(WORDS)-1:0];
 
 reg [31:0] fb_word;
 reg [1:0] fb_byte_off_r;

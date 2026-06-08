@@ -2,21 +2,30 @@ NAME = cpu
 SRC = cpu/*.v vga/*.v vga/hdl/*.sv vga/hdl/*.v
 DUT = cpu2
 LPF = icepi-zero.lpf
-PROGRAM = programs/jumps.s
+PROGRAM = programs/branch.s
 
 validate:
 	@ iverilog cpu/*.v -I ./
 	@ echo "All verilog files valid."
 
 compile:
-	@ riscv64-unknown-elf-as -march=rv32i -mabi=ilp32 -o program.o ${PROGRAM}
-	@ riscv64-unknown-elf-ld -m elf32lriscv -Ttext=0x00000000 -o program.elf program.o
-	@ riscv64-unknown-elf-objcopy -O binary program.elf program.bin
+# FOR LINUX:
+
+	@ riscv64-elf-as -march=rv32i -mabi=ilp32 -o program.o ${PROGRAM}
+	@ riscv64-elf-ld -m elf32lriscv -Ttext=0x00000000 -o program.elf program.o
+	@ riscv64-elf-objcopy -O binary program.elf program.bin
+
+# FOR WINDOWS:
+
+# 	@ riscv64-unknown-elf-as -march=rv32i -mabi=ilp32 -o program.o ${PROGRAM}
+# 	@ riscv64-unknown-elf-ld -m elf32lriscv -Ttext=0x00000000 -o program.elf program.o
+# 	@ riscv64-unknown-elf-objcopy -O binary program.elf program.bin
+
 	@ xxd -c 4 -e program.bin | awk '{print $$2}' > program.hex
 
 	@ echo "Program successfully compiled."
 
-wave:
+wave: compile
 	iverilog cpu/*.v ./testbenches/$(DUT)_tb.v
 	vvp a.out
 	gtkwave wave.vcd

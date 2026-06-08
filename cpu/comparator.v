@@ -11,8 +11,8 @@ always @(*) begin
         3'b001:  taken = (rs1 != rs2);
         3'b100:  taken = (rs1 < rs2);
         3'b101:  taken = (rs1 >= rs2);
-        3'b110:  taken = ($signed(rs1) < $signed(rs2));
-        3'b111:  taken = ($signed(rs1) >= $signed(rs2));
+        3'b110:  taken = (rs1 < rs2);
+        3'b111:  taken = (rs1 >= rs2);
         default: taken = 1'b0;
     endcase
 end

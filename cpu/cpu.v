@@ -7,11 +7,8 @@
 module cpu(
     input wire clk,
     input wire rst,
-    output wire [31:0] rs1,
     output wire [3:0] gpdi_dp
 );
-
-assign rs1 = rs1_data;
 
 wire mem_read, mem_write;
 wire reg_write, ir_write;
@@ -30,6 +27,7 @@ wire [4:0] rd_index  = instr[11:7];
 wire [31:0] imm32;
 
 wire branch_taken;
+reg branch_taken_sync;
 
 wire alu_a_src;
 wire [1:0] alu_b_src;
@@ -70,14 +68,15 @@ reg [31:0] pc_prev;
 
 always @(posedge clk) begin
     pc_prev <= pc;
+    branch_taken_sync <= branch_taken;
 
     if (ir_write) begin
-        ir <= mem_rd_data;
+        ir <= ram_rd_data;
         pc_exec <= pc_prev;
     end
 
     alu_out <= alu_result;
-    mem_data_reg <= mem_rd_data;
+    mem_data_reg <= ram_rd_data;
 end
 
 wire vsync, hsync, de;
@@ -242,7 +241,7 @@ comparator comparator_inst(
 control_unit control_unit_inst(
     .clk(clk), .rst(rst),
     .opcode(opcode), .funct3(funct3), .funct7(funct7),
-    .branch_taken(branch_taken),
+    .branch_taken(branch_taken_sync),
     .mem_read(mem_read), .mem_write(mem_write),
     .reg_write(reg_write), .ir_write(ir_write),
     .alu_a_src(alu_a_src), .alu_b_src(alu_b_src),

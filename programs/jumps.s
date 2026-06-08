@@ -1,11 +1,13 @@
 .global _start
 
 _start:
-    addi a1, zero, 0x5D # addi x4, x0, 0x5D
-    jal ra, add_ten # jal x1, add_ten
-    addi a1, a1, 10
+    addi t0, zero, 0x111
+    jal ra, next
+    addi t0, zero, 0x333
     halt: j halt
+    addi t0, zero, 0x555
 
-add_ten:
-    addi a1, a1, 10
-    ret # jalr zero, 0(ra)
+next:
+    addi t0, zero, 0x222
+    ret
+    addi t0, zero, 0x444
