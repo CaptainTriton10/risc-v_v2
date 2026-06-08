@@ -17,7 +17,7 @@ module vga_text #(
 reg [7:0] font [0:4095];
 
 initial begin
-    $readmemh("font2.hex", font);
+    $readmemh("font3.hex", font);
 end
 
 wire [11:0] base_x = {{7{1'b0}}, px[9:3]};
@@ -56,13 +56,13 @@ wire pixel_active = glyph_row[7 - gpx_r2];
 
 always @(posedge clk) begin
     if (active_r2 && pixel_active) begin
-        r <= 8'hA7;
-        g <= 8'hA7;
-        b <= 8'hA7;
+        r <= 8'hFF;
+        g <= 8'hFF;
+        b <= 8'hFF;
     end else begin
-        r <= 8'h00;
-        g <= 8'h00;
-        b <= 8'hA7;
+        r <= 8'h52;
+        g <= 8'h52;
+        b <= 8'hFF;
     end
 end
 

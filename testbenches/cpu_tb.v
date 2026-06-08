@@ -1,4 +1,4 @@
-`include "params.vh"
+`include "cpu/params.vh"
 `timescale 1ns/1ps
 
 module cpu_tb;

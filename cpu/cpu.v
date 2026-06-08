@@ -1,4 +1,4 @@
-`include "params.vh"
+`include "cpu/params.vh"
 
 // `define TESTBENCH
 
@@ -16,7 +16,6 @@ assign rs1 = rs1_data;
 wire mem_read, mem_write;
 wire reg_write, ir_write;
 
-// wire [31:0] ir = ram_rd_data;
 reg [31:0] ir;
 
 wire [31:0] instr = ir;
@@ -39,6 +38,7 @@ wire [1:0] wb_sel;
 
 wire [31:0] pc;
 wire [31:0] pc_next1;
+// wire [31:0] pc_4 = pc_exec + 32'h4;
 wire [31:0] pc_4 = pc + 32'h4;
 wire pc_write;
 wire [1:0] pc_src;
@@ -60,6 +60,7 @@ wire [31:0] mem_addr = alu_out;
 reg [31:0] mem_addr_mux;
 
 wire [31:0] ram_rd_data;
+wire [31:0] mem_rd_data;
 reg [31:0] mem_data_reg;
 reg [3:0] byte_mask;
 
@@ -71,12 +72,12 @@ always @(posedge clk) begin
     pc_prev <= pc;
 
     if (ir_write) begin
-        ir <= ram_rd_data;
+        ir <= mem_rd_data;
         pc_exec <= pc_prev;
     end
 
     alu_out <= alu_result;
-    mem_data_reg <= ram_rd_data;
+    mem_data_reg <= mem_rd_data;
 end
 
 wire vsync, hsync, de;
@@ -124,7 +125,7 @@ always @(*) begin
     reg_wr_data = 32'h0;
     case (wb_sel)
         `WB_ALU: reg_wr_data = alu_out;
-        `WB_PC4: reg_wr_data = pc_4; // ALU calculates PC + 4
+        `WB_PC4: reg_wr_data = pc;
         `WB_MEM: reg_wr_data = mem_data_reg;
     endcase
 end

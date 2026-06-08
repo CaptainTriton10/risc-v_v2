@@ -1,6 +1,6 @@
 module ram #(
     parameter SIZE = 32768,
-    parameter FB_BLOCK = 16'h1C00
+    parameter FB_BLOCK = 16'h7000
 ) (
     input wire clk,
     input wire [31:0] data_addr,
@@ -14,12 +14,13 @@ module ram #(
 );
 
 localparam WORDS = SIZE / 4;
+localparam FB_BLOCK_W = FB_BLOCK / 4;
 
 wire [$clog2(WORDS)-1:0] word_data_addr  = data_addr[2 +: $clog2(WORDS)];
 
 initial begin
-    // $readmemh("fb.hex", mem, 16'h1C00, 16'h2000);
-    $readmemh("program.hex", mem, 0, FB_BLOCK);
+    // $readmemh("vga/all_text.hex", mem, FB_BLOCK_W, WORDS);
+    $readmemh("program.hex", mem, 0, FB_BLOCK_W);
 end
 
 (* ram_style = "block" *) reg [31:0] mem [(WORDS)-1:0];
@@ -37,7 +38,7 @@ always @(posedge clk) begin
 
     if (re) rd_data <= mem[word_data_addr];
 
-    fb_word <= mem[fb_addr[11:2] + FB_BLOCK];
+    fb_word <= mem[fb_addr[11:2] + FB_BLOCK_W];
     fb_byte_off_r <= fb_addr[1:0];
 end
 

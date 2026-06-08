@@ -9,12 +9,12 @@ validate:
 	@ echo "All verilog files valid."
 
 compile:
-	riscv64-unknown-elf-as -march=rv32i -mabi=ilp32 -o program.o ${PROGRAM}
-	riscv64-unknown-elf-ld -m elf32lriscv -Ttext=0x00000000 -o program.elf program.o
-	riscv64-unknown-elf-objcopy -O binary program.elf program.bin
-	xxd -c 4 -e program.bin | awk '{print $$2}' > program.hex
+	@ riscv64-unknown-elf-as -march=rv32i -mabi=ilp32 -o program.o ${PROGRAM}
+	@ riscv64-unknown-elf-ld -m elf32lriscv -Ttext=0x00000000 -o program.elf program.o
+	@ riscv64-unknown-elf-objcopy -O binary program.elf program.bin
+	@ xxd -c 4 -e program.bin | awk '{print $$2}' > program.hex
 
-	@ echo "\nProgram successfully compiled."
+	@ echo "Program successfully compiled."
 
 wave:
 	iverilog cpu/*.v ./testbenches/$(DUT)_tb.v

@@ -1,4 +1,4 @@
-`include "params.vh"
+`include "cpu/params.vh"
 
 module fsm_control (
     input wire clk, rst,
@@ -60,7 +60,6 @@ always @(*) begin
 
     case (state)
         `S_FETCH: begin
-            ir_write = 1'b1;
             mem_read = 1'b1;
             mem_addr_src = `MEM_PC;
             pc_write = 1'b1;
@@ -69,6 +68,7 @@ always @(*) begin
             alu_b_src = `ALU_B_4;
         end
         `S_DECODE: begin
+            ir_write = 1'b1;
             // Proactively calculate the branch target
             alu_a_src = `ALU_A_PC;
             alu_b_src = `ALU_B_IMM;
@@ -86,22 +86,14 @@ always @(*) begin
                 `OP_JALR: begin
                     alu_a_src = `ALU_A_RS1;
                     alu_b_src = `ALU_B_IMM;
-                    pc_write = 1'b1;
-                    pc_src = `PC_IMM_RS1;
                 end
                 `OP_JAL: begin
                     alu_a_src = `ALU_A_PC;
                     alu_b_src = `ALU_B_IMM;
-                    pc_write = 1'b1;
-                    pc_src = `PC_IMM;
                 end
                 `OP_LOAD, `OP_STORE: begin
                     alu_a_src = `ALU_A_RS1;
                     alu_b_src = `ALU_B_IMM;
-                end
-                `OP_BRANCH: begin
-                    pc_write = branch_taken;
-                    pc_src = `PC_IMM;
                 end
                 `OP_LUI: begin
                     alu_b_src = `ALU_B_IMM;
@@ -110,6 +102,7 @@ always @(*) begin
                     alu_a_src = `ALU_A_PC;
                     alu_b_src = `ALU_B_IMM;
                 end
+                default: ;
             endcase
         end
         `S_MEMORY: begin
@@ -125,7 +118,20 @@ always @(*) begin
             case (opcode)
                 `OP_REG, `OP_IMM, `OP_LUI: wb_sel = `WB_ALU;
                 `OP_LOAD: wb_sel = `WB_MEM;
-                `OP_JAL, `OP_JALR: wb_sel = `WB_PC4;
+                `OP_JAL: begin
+                    pc_write = 1'b1;
+                    pc_src = `PC_IMM;
+                    wb_sel = `WB_PC4;
+                end
+                `OP_JALR: begin
+                    pc_write = 1'b1;
+                    pc_src = `PC_IMM_RS1;
+                    wb_sel = `WB_PC4;
+                end
+                `OP_BRANCH: begin
+                    // TODO: store
+                    pc_write = branch_taken;
+                end
                 default: ;
             endcase
         end

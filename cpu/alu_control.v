@@ -1,4 +1,4 @@
-`include "params.vh"
+`include "cpu/params.vh"
 
 module alu_control(
     input wire [2:0] funct3,

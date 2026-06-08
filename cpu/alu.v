@@ -1,4 +1,4 @@
-`include "params.vh"
+`include "cpu/params.vh"
 
 module alu #(
     parameter REG_ADDR_WIDTH = 5
