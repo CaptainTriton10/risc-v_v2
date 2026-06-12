@@ -7,6 +7,7 @@
 module cpu(
     input wire clk,
     input wire rst,
+    input wire uart_rx,
     output wire [3:0] gpdi_dp
 );
 
@@ -71,12 +72,12 @@ always @(posedge clk) begin
     branch_taken_sync <= branch_taken;
 
     if (ir_write) begin
-        ir <= ram_rd_data;
+        ir <= mem_rd_data;
         pc_exec <= pc_prev;
     end
 
     alu_out <= alu_result;
-    mem_data_reg <= ram_rd_data;
+    mem_data_reg <= mem_rd_data;
 end
 
 wire vsync, hsync, de;
@@ -186,11 +187,31 @@ always @(*) begin
     endcase
 end
 
+// UART //
+
+wire uart_chip_sel = (mem_addr_mux[15:12] == 4'h5);
+wire ram_chip_sel = !uart_chip_sel;
+wire [31:0] uart_rd_data;
+wire uart_irq;
+
+`ifndef TESTBENCH
+    uart_mmio uart_mmio_inst (
+        .clk(clk), .rst(rst),
+        .rx(uart_rx), .chip_select(uart_chip_sel),
+        .addr(mem_addr_mux[3:0]),
+        .rd_en(mem_read && uart_chip_sel), .rd_data(uart_rd_data),
+        .irq(uart_irq)
+    );
+`endif
+
+assign mem_rd_data = uart_chip_sel ? uart_rd_data : ram_rd_data;
+
 ram ram_inst (
     .clk(clk),
     .data_addr(mem_addr_mux),
     .fb_addr(fb_addr),
-    .we(mem_write), .re(mem_read),
+    .we(mem_write && ram_chip_sel),
+    .re(mem_read && ram_chip_sel),
     .byte_mask(byte_mask),
     .wr_data(wr_data_mux),
     .rd_data(ram_rd_data),
