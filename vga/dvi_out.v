@@ -1,7 +1,7 @@
 module dvi_out #(
     parameter COLS = 80,
     parameter ROWS = 30,
-    parameter CHAR_WIDTH = 8,
+    parameter CHAR_WIDTH = 16,
     parameter BIT_DEPTH = 8
 ) (
     input  wire       clkp,

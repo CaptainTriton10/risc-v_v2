@@ -84,7 +84,7 @@ wire vsync, hsync, de;
 wire [7:0] vga_r, vga_g, vga_b;
 
 wire [11:0] fb_addr;
-wire [7:0] fb_data;
+wire [15:0] fb_data;
 
 // DISPLAY OUTPUT //
 

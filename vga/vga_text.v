@@ -1,7 +1,7 @@
 module vga_text #(
     parameter COLS = 80,
     parameter ROWS = 30,
-    parameter CHAR_WIDTH = 8,
+    parameter CHAR_WIDTH = 16,
     parameter BIT_DEPTH = 8
 ) (
     input wire clk,
@@ -37,7 +37,7 @@ always @(posedge clk) begin
 end
 
 wire active = (px < (COLS << 3)) && (py < (ROWS << 4));
-wire [11:0] font_addr = {fb_data, gpy_r1};
+wire [11:0] font_addr = {fb_data[15:8], gpy_r1};
 
 assign fb_addr = active ? ((base_y << 4) + (base_y << 6)) + base_x : 0;
 
@@ -56,9 +56,10 @@ wire pixel_active = glyph_row[7 - gpx_r2];
 
 always @(posedge clk) begin
     if (active_r2 && pixel_active) begin
-        r <= 8'hFF;
-        g <= 8'hFF;
-        b <= 8'hFF;
+        // Shift by 6 to convert 2 bit to 8 bit
+        r <= (fb_data[7:6] << 6);
+        g <= (fb_data[5:4] << 6); 
+        b <= (fb_data[3:2] << 6);
     end else begin
         r <= 8'h52;
         g <= 8'h52;

@@ -1,19 +1,36 @@
-li x1, 0x7000
+.global _start
 
-li x2, 0x48656c6c
-sw x2, 0(x1)
-addi x1, x1, 4
+_start:
+    li x1, 0x6000
 
-li x2, 0x6f2c2057
-sw x2, 0(x1)
-addi x1, x1, 4
+    # 48 65 6C 6C 6F 2C 20 57 6F 72 6C 64 21
 
-li x2, 0x6f726c64
-sw x2, 0(x1)
-addi x1, x1, 4
+    li x2, 0x48C06580
+    sw x2, 0(x1)
+    addi x1, x1, 4
 
-li x2, 0x21000000
-sw x2, 0(x1)
-addi x1, x1, 4
+    li x2, 0x6C406C00
+    sw x2, 0(x1)
+    addi x1, x1, 4
 
-loop: j loop
+    li x2, 0x6F302C20
+    sw x2, 0(x1)
+    addi x1, x1, 4
+
+    li x2, 0x20105700
+    sw x2, 0(x1)
+    addi x1, x1, 4
+
+    li x2, 0x6F0C7208
+    sw x2, 0(x1)
+    addi x1, x1, 4
+
+    li x2, 0x6C046400
+    sw x2, 0(x1)
+    addi x1, x1, 4
+
+    li x2, 0x21F00000
+    sw x2, 0(x1)
+    addi x1, x1, 4
+
+    halt: j halt

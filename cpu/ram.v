@@ -1,6 +1,6 @@
 module ram #(
     parameter SIZE = 32768,
-    parameter FB_BLOCK = 16'h7000
+    parameter FB_BLOCK = 16'h6000
 ) (
     input wire clk,
     input wire [31:0] data_addr,
@@ -9,7 +9,7 @@ module ram #(
     input wire re,
     input wire [3:0] byte_mask,
     input wire [31:0] wr_data,
-    output reg [7:0] fb_data,
+    output reg [15:0] fb_data,
     output reg [31:0] rd_data
 );
 
@@ -38,16 +38,14 @@ always @(posedge clk) begin
 
     if (re) rd_data <= mem[word_data_addr];
 
-    fb_word <= mem[fb_addr[11:2] + FB_BLOCK_W];
-    fb_byte_off_r <= fb_addr[1:0];
+    fb_word <= mem[fb_addr[11:1] + FB_BLOCK_W];
+    fb_byte_off_r <= fb_addr[0];
 end
 
 always @(*) begin
     case (fb_byte_off_r)
-        2'b00: fb_data = fb_word[31:24];
-        2'b01: fb_data = fb_word[23:16];
-        2'b10: fb_data = fb_word[15: 8];
-        2'b11: fb_data = fb_word[ 7: 0];
+        1'b0: fb_data = fb_word[31:16];
+        1'b1: fb_data = fb_word[15:0];
     endcase
 end
 
